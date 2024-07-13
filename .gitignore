@@ -1,4 +1,4 @@
 .envrc
-*.tfstate
+*.tfstate*
 # lock.hcl管理したくなったら `.terraform` のみにする
 .terraform*
