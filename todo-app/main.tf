@@ -41,8 +41,8 @@ resource "google_cloudfunctions2_function" "todo-app" {
   description = "todo-app function"
 
   build_config {
-    runtime     = "nodejs20"
-    entry_point = "execute"
+    runtime     = "go122"
+    entry_point = "todoapp"
     source {
       storage_source {
         bucket = google_storage_bucket.todo-app.name
@@ -57,6 +57,7 @@ resource "google_cloudfunctions2_function" "todo-app" {
     timeout_seconds    = 60
     environment_variables = {
       LOG_EXECUTION_ID = "true" # plan時に毎回差分が出てしまうので書いておく
+      PROJECT          = var.project
     }
   }
 }
