@@ -10,3 +10,9 @@
 # 既存のbootstrapまで済んだ環境で実行
 talosctl gen secrets --from-controlplane-config controlplane.yaml
 ```
+
+`talos-extensions.yaml`はextensionの入ったOSイメージのURLを生成するために使う。
+
+```bash
+curl -X POST --data-binary @talos-extensions.yaml https://factory.talos.dev/schematics
+```
