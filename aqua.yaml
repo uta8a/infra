@@ -12,3 +12,5 @@ registries:
 packages:
 - name: opentofu/opentofu@v1.7.3
 - name: twistedpair/google-cloud-sdk@483.0.0
+- name: kubernetes-sigs/kustomize@kustomize/v5.6.0
+- name: fluxcd/flux2@v2.5.1
