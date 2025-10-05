@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/yaml@*": "1.0.6",
+    "jsr:@std/yaml@^1.0.9": "1.0.9"
+  },
+  "jsr": {
+    "@std/yaml@1.0.6": {
+      "integrity": "c9a5a914e1d51c46756cb10e356710035cfa905e713c90d3b711413fd3aead27"
+    },
+    "@std/yaml@1.0.9": {
+      "integrity": "6bad3dc766dd85b4b37eabcba81b6aa4eac7a392792ae29abcfb0f90602d55bb"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/yaml@^1.0.9"
+    ]
+  }
+}
