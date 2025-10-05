@@ -1,0 +1,5 @@
+service:
+  name: "Todo app"
+  platform: ["Google Cloud"]
+  environment: ["sandbox"]
+  deployed: false
