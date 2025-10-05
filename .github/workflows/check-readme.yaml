@@ -3,6 +3,9 @@ name: Check readme.yaml files exists
 on:
   push:
 
+permissions:
+  contents: read
+
 jobs:
   check-readme-yaml:
     name: Check readme.yaml exists
