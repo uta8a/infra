@@ -9,6 +9,13 @@ project-01/
     readme.yaml # サービスのメタデータ
 ```
 
+## Environment
+
+- prod: 本番環境
+- stg: ステージング環境
+- dev: 開発環境
+- sandbox: 検証環境(prodへ取り込むつもりがあまりないもの)
+
 <!-- BEGIN INFRA LIST -->
 ## Infrastructure Services
 
