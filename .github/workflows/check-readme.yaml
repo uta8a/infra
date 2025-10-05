@@ -1,0 +1,39 @@
+name: Check readme.yaml files exists
+
+on:
+  push:
+    paths:
+      - '**/readme.yaml'
+
+jobs:
+  check-readme-yaml:
+    name: Check readme.yaml exists
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Verify readme.yaml exists
+        run: |
+          # Check all directories (excluding .github) at depth 1
+          missing_dirs=()
+          for dir in */; do
+            # Skip .github directory
+            if [ "$dir" = ".github/" ]; then
+              continue
+            fi
+            
+            # Check if readme.yaml exists in the directory
+            if [ ! -f "${dir}readme.yaml" ]; then
+              missing_dirs+=("$dir")
+            fi
+          done
+          
+          # Report results
+          if [ ${#missing_dirs[@]} -ne 0 ]; then
+            echo "The following directories are missing readme.yaml:"
+            printf '  - %s\n' "${missing_dirs[@]}"
+            exit 1
+          fi
+          
+          echo "All directories have readme.yaml files."
