@@ -1,0 +1,41 @@
+name: Publish manifest to OCI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+      - 'use-flux'
+
+jobs:
+  push-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install aqua
+        uses: aquaproj/aqua-installer@v3.1.2
+        with:
+          aqua_version: v2.48.3
+      - name: Generate artifact
+        run: |
+          mkdir out
+          tk export ./out environments/default
+          cd out && kustomize create --autodetect --recursive
+        working-directory: ./home-k8s-app/example
+      - name: Push immutable artifact
+        run: |
+          flux push artifact \
+            oci://ghcr.io/${{ github.repository }}/manifests:$(git rev-parse --short HEAD) \
+            --source="$(git config --get remote.origin.url)" \
+            --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
+            --creds flux:${{ secrets.GITHUB_TOKEN }} \
+            --path="./home-k8s-app/example/out"
+      - name: Tag artifact as latest
+        run: |
+          flux tag artifact \
+            oci://ghcr.io/${{ github.repository }}/manifests:$(git rev-parse --short HEAD) \
+            --creds flux:${{ secrets.GITHUB_TOKEN }} \
+            --tag latest
