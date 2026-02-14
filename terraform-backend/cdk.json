@@ -1,0 +1,3 @@
+{
+  "app": "pnpm exec ts-node --prefer-ts-exts bin/terraform-backend.ts"
+}

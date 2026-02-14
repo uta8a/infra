@@ -1,0 +1,4 @@
+[tools]
+aws-cli = {version = "2.33.22", symlink_bins = "true"}
+pnpm = "10.29.3"
+terraform = "1.14.5"
