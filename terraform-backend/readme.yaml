@@ -1,0 +1,5 @@
+service:
+  name: "Terraform backend"
+  platform: ["AWS"]
+  environment: ["sandbox"]
+  deployed: true
