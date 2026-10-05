@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# Generate and validate recovery machine configs. This script never changes a node.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: scripts/recovery-prepare [--output-dir DIRECTORY]
+
+Fetches the existing Talos secrets and private disk-selector patches from
+Bitwarden, generates machine configs, validates them, and queries maintenance
+mode disks read-only. With no option, all recovered material is removed when
+the script exits. --output-dir must not exist and preserves owner-only output
+so a human can inspect it and, separately, choose whether to apply a config.
+
+Environment variables optionally override Bitwarden item names:
+  TALOS_SECRETS_BW_ITEM
+  HOME_K8S_PROD_RED_PRIVATE_BW_ITEM
+  HOME_K8S_PROD_GREEN_PRIVATE_BW_ITEM
+EOF
+}
+
+output_dir=""
+while (($#)); do
+  case "$1" in
+    --output-dir)
+      (($# >= 2)) || { usage >&2; exit 2; }
+      output_dir="$2"
+      shift 2
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+for command in bw talosctl yq; do
+  command -v "${command}" >/dev/null || {
+    echo "missing ${command}; run this through nix develop" >&2
+    exit 1
+  }
+done
+
+repository_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+topology_file="${repository_dir}/talos/cluster/topology.yaml"
+patch_dir="${repository_dir}/talos/cluster/patches"
+
+umask 077
+temporary_output=false
+if [[ -n "${output_dir}" ]]; then
+  [[ ! -e "${output_dir}" ]] || {
+    echo "refusing to overwrite output directory: ${output_dir}" >&2
+    exit 1
+  }
+  mkdir -p "${output_dir}"
+else
+  output_dir="$(mktemp -d "${TMPDIR:-/tmp}/home-k8s-recovery.XXXXXX")"
+  temporary_output=true
+fi
+chmod 700 "${output_dir}"
+
+cleanup() {
+  if "${temporary_output}" && [[ -d "${output_dir}" ]]; then
+    rm -rf "${output_dir}"
+  fi
+}
+trap cleanup EXIT
+
+if ! bw unlock --check >/dev/null 2>&1; then
+  echo "Bitwarden is locked or not logged in. Log in and unlock it first." >&2
+  exit 1
+fi
+
+secrets_item="${TALOS_SECRETS_BW_ITEM:-home-k8s / Talos secrets}"
+red_private_item="${HOME_K8S_PROD_RED_PRIVATE_BW_ITEM:-home-k8s / Talos private inventory / home-k8s-prod-red-private.yaml}"
+green_private_item="${HOME_K8S_PROD_GREEN_PRIVATE_BW_ITEM:-home-k8s / Talos private inventory / home-k8s-prod-green-private.yaml}"
+
+secrets_file="${output_dir}/secrets.yaml"
+private_dir="${output_dir}/private"
+configs_dir="${output_dir}/generated"
+mkdir -p "${private_dir}" "${configs_dir}"
+chmod 700 "${private_dir}" "${configs_dir}"
+
+item_id() {
+  local item="$1"
+  local id
+  id="$(bw get item "${item}" | yq -r '.id')"
+  [[ -n "${id}" && "${id}" != "null" ]] || {
+    echo "could not resolve Bitwarden item: ${item}" >&2
+    return 1
+  }
+  printf '%s\n' "${id}"
+}
+
+# Attachments avoid the Bitwarden secure-note text size limit and keep raw YAML
+# out of terminal output. Their filenames are part of the recovery contract.
+bw get attachment secrets.yaml \
+  --itemid "$(item_id "${secrets_item}")" \
+  --output "${output_dir}/"
+bw get attachment home-k8s-prod-red-private.yaml \
+  --itemid "$(item_id "${red_private_item}")" \
+  --output "${private_dir}/"
+bw get attachment home-k8s-prod-green-private.yaml \
+  --itemid "$(item_id "${green_private_item}")" \
+  --output "${private_dir}/"
+chmod 600 "${secrets_file}" "${private_dir}"/*.yaml
+
+for file in "${secrets_file}" "${private_dir}"/*.yaml; do
+  [[ -s "${file}" ]] || { echo "Bitwarden returned an empty file" >&2; exit 1; }
+done
+
+cluster_name="$(yq -r '.cluster.name' "${topology_file}")"
+cluster_endpoint="$(yq -r '.cluster.controlPlane.endpoint' "${topology_file}")"
+talos_version="$(yq -r '.cluster.talosVersion' "${topology_file}")"
+kubernetes_version="$(yq -r '.cluster.kubernetesVersion' "${topology_file}")"
+vip="$(yq -r '.cluster.controlPlane.layer2Vip' "${topology_file}")"
+dns_name="$(yq -r '.cluster.controlPlane.dnsName' "${topology_file}")"
+
+installer_for() {
+  case "$1" in
+    home-k8s-prod-red|home-k8s-prod-green)
+      printf '%s\n' "factory.talos.dev/installer/d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e:${talos_version}"
+      ;;
+    home-k8s-prod-yellow)
+      printf '%s\n' "factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515:${talos_version}"
+      ;;
+    *)
+      echo "unknown node in public topology: $1" >&2
+      return 1
+      ;;
+  esac
+}
+
+while IFS=$'\t' read -r hostname address patch; do
+  public_patch="${repository_dir}/talos/cluster/${patch}"
+  output_file="${configs_dir}/${hostname}.yaml"
+  private_patch_args=()
+  private_patch="${private_dir}/${hostname}-private.yaml"
+  if [[ -f "${private_patch}" ]]; then
+    private_patch_args=(--config-patch-control-plane "@${private_patch}")
+  fi
+
+  talosctl gen config "${cluster_name}" "${cluster_endpoint}" \
+    --with-secrets "${secrets_file}" \
+    --talos-version "${talos_version}" \
+    --kubernetes-version "${kubernetes_version}" \
+    --dns-domain cluster.local \
+    --install-image "$(installer_for "${hostname}")" \
+    --additional-sans "${dns_name}" \
+    --additional-sans "${vip}" \
+    --config-patch-control-plane "@${public_patch}" \
+    "${private_patch_args[@]}" \
+    --output-types controlplane \
+    --output "${output_file}" \
+    --with-docs=false \
+    --with-examples=false
+  talosctl validate --strict --mode metal --config "${output_file}"
+
+  disk_report="${output_dir}/disks-${hostname}.txt"
+  if talosctl get disks --insecure --nodes "${address}" > "${disk_report}"; then
+    chmod 600 "${disk_report}"
+    echo "Read disk inventory for ${hostname}; protected report: ${disk_report}"
+  else
+    rm -f "${disk_report}"
+    echo "WARNING: could not read maintenance-mode disk inventory for ${hostname}" >&2
+  fi
+done < <(yq -r '.nodes[] | [.hostname, .address, .patch] | @tsv' "${topology_file}")
+
+echo
+echo "Validated configs: ${configs_dir}"
+echo "Cluster endpoint: ${cluster_endpoint}"
+echo "Before any manual apply-config, verify node IP, hostname, MAC address, install disk, disk serial, Talos version, and endpoint."
+echo "NO CONFIG HAS BEEN APPLIED."
+if "${temporary_output}"; then
+  echo "Temporary recovery material will now be removed. Use --output-dir for an owner-only directory to inspect manually."
+else
+  echo "Output has been retained at the explicit owner-only directory: ${output_dir}"
+fi

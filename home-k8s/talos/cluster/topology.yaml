@@ -1,0 +1,32 @@
+# Non-secret production cluster inputs. Generated machine configs and their
+# shared secrets are intentionally excluded from Git.
+cluster:
+  name: home-k8s-prod
+  talosVersion: v1.14.2
+  kubernetesVersion: v1.37.1
+  dnsDomain: cluster.local
+  controlPlane:
+    endpoint: https://k8s.home.arpa:6443
+    dnsName: k8s.home.arpa
+    layer2Vip: 192.168.30.5
+  network:
+    subnet: 192.168.30.0/24
+    gateway: 192.168.30.1
+    dnsServer: 192.168.30.1
+    searchDomain: home.arpa
+nodes:
+  - hostname: home-k8s-prod-red
+    address: 192.168.30.61
+    patch: patches/home-k8s-prod-red.yaml
+    workloadScheduling: enabled
+    longhornStorage: planned
+  - hostname: home-k8s-prod-green
+    address: 192.168.30.62
+    patch: patches/home-k8s-prod-green.yaml
+    workloadScheduling: enabled
+    longhornStorage: planned
+  - hostname: home-k8s-prod-yellow
+    address: 192.168.30.63
+    patch: patches/home-k8s-prod-yellow.yaml
+    workloadScheduling: disabled
+    longhornStorage: excluded

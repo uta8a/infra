@@ -1,5 +1,0 @@
-service:
-  name: "home k8s"
-  platform: ["home-k8s"]
-  environment: ["prod"]
-  deployed: true

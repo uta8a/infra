@@ -1,0 +1,17 @@
+# home-k8s-dev-blue: host and Talos VMs share the physical homelab L2.
+network:
+  version: 2
+  ethernets:
+    enp2s0f1:
+      match:
+        macaddress: fc:5c:ee:d5:bb:13
+      set-name: enp2s0f1
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    br0:
+      interfaces:
+        - enp2s0f1
+      macaddress: fc:5c:ee:d5:bb:13
+      dhcp4: true
+      dhcp6: true
