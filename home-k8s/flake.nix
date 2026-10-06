@@ -104,6 +104,7 @@
           OVMF
           libvirt
           virt-manager
+          attr
         ];
       };
     };

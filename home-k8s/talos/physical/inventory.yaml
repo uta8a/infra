@@ -1,4 +1,5 @@
-# Observed in Talos v1.14.2 maintenance mode on 2026-10-06.
+# Runtime boot state verified without SD media on 2026-10-06.
+# Installation-media details below are historical, not attached boot disks.
 nodes:
   - hostname: home-k8s-prod-red
     address: 192.168.30.61
@@ -12,11 +13,17 @@ nodes:
       device: /dev/nvme0n1
       size: 512GB
       model: WD PC SN740 SDDQNQD-512G-1201
-    bootMedia:
-      device: /dev/sdb
+    boot:
+      device: /dev/nvme0n1
+      installationMediaRequired: false
+      verifiedOn: "2026-10-06"
+    installationMedia:
+      type: sd-card
+      attached: false
+      lastObservedDevice: /dev/sdb
       size: 64GB
       model: USB3.0 CRW
-      purpose: Talos SD card
+      purpose: initial installation or optional recovery
     schematicId: d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e
     extensions:
       - amd-ucode
@@ -38,11 +45,17 @@ nodes:
       device: /dev/nvme0n1
       size: 512GB
       model: WD PC SN740 SDDQNQD-512G-1201
-    bootMedia:
-      device: /dev/sdb
+    boot:
+      device: /dev/nvme0n1
+      installationMediaRequired: false
+      verifiedOn: "2026-10-06"
+    installationMedia:
+      type: sd-card
+      attached: false
+      lastObservedDevice: /dev/sdb
       size: 64GB
       model: USB3.0 CRW
-      purpose: Talos SD card
+      purpose: initial installation or optional recovery
     schematicId: d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e
     extensions:
       - amd-ucode

@@ -30,6 +30,40 @@ The attachment filenames are `secrets.yaml`,
 Environment variables documented by `scripts/recovery-prepare --help` can
 substitute organization-specific item names or IDs.
 
+## Installation media and retained data
+
+Red and green now boot from their NVMe disks with their SD cards removed;
+yellow boots from its virtual disk with the ISO ejected. These paths were
+[verified on 2026-10-06](boot-verification.md). The original SD cards and
+their Talos boot images are no longer required for normal operation. Keeping
+a ready-to-use card is optional, not a recovery prerequisite.
+
+The inventories distinguish the current `boot` disk from historical or
+detached `installationMedia`. The old `/dev/sdb` value is an observation from
+the installation session, not a current device or a future write target.
+
+If new installation media is needed, use the recorded `talosVersion` and
+`schematicId` in `talos/physical/inventory.yaml` to obtain the matching
+`metal-amd64.iso` from the [Talos Image Factory](https://factory.talos.dev/).
+The version and schematic describe reproducible boot assets; they do not
+contain this cluster's identity or state. Identify the actual removable
+device again before writing any image. Do not reset a healthy installed node
+just to recreate a spare card. The official
+[ISO installation guide](https://docs.siderolabs.com/talos/v1.8/platform-specific-installations/bare-metal-platforms/iso)
+also describes preferring the installed disk or removing the ISO after
+installation.
+
+Retain the existing `secrets.yaml`, private disk-selector patches, and
+administrative credentials in their protected locations, plus suitable etcd
+snapshots for cluster-state recovery. Recreating an SD image does not replace
+any of them, and does not require generating new cluster secrets. A bootable
+SD card alone is not an etcd or application-data backup.
+
+The boot test did not inspect every file on the detached cards. Before
+formatting a card for reuse, check for any separately saved files that need
+to be retained. Card erasure is a separate, explicitly targeted operation;
+no card is erased by this procedure.
+
 ## Prepare recovery material
 
 Starting with the nodes booted in Talos maintenance mode and a recovery host

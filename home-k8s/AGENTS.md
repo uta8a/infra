@@ -46,7 +46,8 @@ firewall settings, netplan, or UniFi configuration.
   Nix flake. Do not install those CLIs with apt.
 - The pinned `x86_64-linux` shell provides `git`, `curl`, `cacert`,
   `talosctl`, `kubectl`, `bitwarden-cli`, `jq`, and `yq-go`, plus the declared
-  QEMU/libvirt tools. Pin `nixpkgs` in `flake.lock`.
+  QEMU/libvirt tools and `attr` for inspecting libvirt ownership metadata.
+  Pin `nixpkgs` in `flake.lock`.
 - Do not place manually downloaded `talosctl` or `kubectl` binaries in
   `/usr/local/bin` or elsewhere on the remote host.
 
