@@ -4,10 +4,13 @@
 !.env.example
 secrets.yaml
 talosconfig
+kubeconfig
 *.key
 *.pem
 *.crt
 .artifacts/
+*.snapshot
+*.qcow2
 
 # Generated Talos credentials and machine configurations are secret material.
 talos/generated/

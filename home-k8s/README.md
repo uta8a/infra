@@ -8,6 +8,14 @@ The repository deliberately excludes generated machine configurations and all
 Talos credentials. The source-controlled topology and patches were generated,
 validated, and applied to the three control-plane nodes remotely. The cluster
 was bootstrapped on 2026-10-06 and its three control-plane nodes are Ready.
+On the same date, red and green passed SD-card-free NVMe boot tests, and
+yellow booted from its virtual disk with the ISO removed. The
+[boot verification record](docs/boot-verification.md) includes the evidence
+and remaining limits, including yellow's disabled host-level autostart.
+Normal operation no longer needs the SD cards or an attached ISO. The
+installation media may be kept as optional recovery tools or recreated from
+the recorded Talos version and schematic; they are not cluster backups. See
+[recovery media and retained data](docs/disaster-recovery.md#installation-media-and-retained-data).
 
 ## Toolchain
 
@@ -18,7 +26,8 @@ nix develop
 ```
 
 The shell provides `git`, `curl`, `cacert`, `talosctl`, `kubectl`, `bw`, `jq`,
-and `yq`, as well as `qemu`, `libvirt`, and `virt-install` for `x86_64-linux`.
+and `yq`, as well as `qemu`, `libvirt`, `virt-install`, and `attr` for
+`x86_64-linux`.
 Its `nixpkgs` revision is recorded in `flake.lock`.
 
 ## Documents
@@ -29,6 +38,8 @@ Its `nixpkgs` revision is recorded in `flake.lock`.
   security, and out-of-scope rules.
 - [KVM and libvirt management](docs/kvm-libvirt-management.md) — Nix
   userspace, service activation, and network safety boundary.
+- [Boot verification](docs/boot-verification.md) — yellow disk-only boot and
+  one-at-a-time physical SD-free boot checks.
 - [Production machine configuration](docs/production-machine-configs.md) —
   non-secret topology, protected generated output, validation, and the
   apply-stop boundary.

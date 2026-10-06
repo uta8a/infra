@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Provision an undefined VM for installation. The ISO is needed here, not
+# for normal starts of an installed VM; eject it after disk boot is verified.
 set -euo pipefail
 
 name="home-k8s-prod-yellow"
