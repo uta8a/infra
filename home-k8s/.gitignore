@@ -1,4 +1,21 @@
+# Credentials and local environment files must never enter this repository.
+.env
+.env.*
+!.env.example
 secrets.yaml
 talosconfig
-controlplane.yaml
-worker.yaml
+*.key
+*.pem
+*.crt
+.artifacts/
+
+# Generated Talos credentials and machine configurations are secret material.
+talos/generated/
+talos/secrets/
+
+# Private hardware inventory.  Keep the examples below source-controlled.
+talos/private/*-private.yaml
+!talos/private/*-private.example.yaml
+
+# Recovery output is intentionally local and owner-readable only.
+.recovery/

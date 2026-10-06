@@ -1,18 +1,49 @@
 # home-k8s
 
-おうちk8sの設定ファイル
+This directory is the MacBook-side source of truth for the `home-k8s` Nix
+toolchain and the non-secret production Talos topology. The remote development
+host is used only through SSH; it is not a Codex installation target.
 
-# Requirements
+The repository deliberately excludes generated machine configurations and all
+Talos credentials. The source-controlled topology and patches were generated,
+validated, and applied to the three control-plane nodes remotely. The cluster
+was bootstrapped on 2026-10-06 and its three control-plane nodes are Ready.
 
-- secrets.yaml: Talos Linuxの設定ファイルを生成するために必要なSecrets。bitwardenで管理している。
+## Toolchain
+
+On `home-k8s-dev-blue`, enter the pinned toolchain with:
 
 ```bash
-# 既存のbootstrapまで済んだ環境で実行
-talosctl gen secrets --from-controlplane-config controlplane.yaml
+nix develop
 ```
 
-`talos-extensions.yaml`はextensionの入ったOSイメージのURLを生成するために使う。
+The shell provides `git`, `curl`, `cacert`, `talosctl`, `kubectl`, `bw`, `jq`,
+and `yq`, as well as `qemu`, `libvirt`, and `virt-install` for `x86_64-linux`.
+Its `nixpkgs` revision is recorded in `flake.lock`.
 
-```bash
-curl -X POST --data-binary @talos-extensions.yaml https://factory.talos.dev/schematics
-```
+## Documents
+
+- [Remote toolchain runbook](docs/remote-toolchain-runbook.md) — safe
+  public-only transfer and Nix-shell validation.
+- [Operating boundaries](docs/operating-boundaries.md) — ownership, transfer,
+  security, and out-of-scope rules.
+- [KVM and libvirt management](docs/kvm-libvirt-management.md) — Nix
+  userspace, service activation, and network safety boundary.
+- [Production machine configuration](docs/production-machine-configs.md) —
+  non-secret topology, protected generated output, validation, and the
+  apply-stop boundary.
+- [Disaster recovery](docs/disaster-recovery.md) — reconstructing and
+  validating machine configs without applying them.
+- [Private-material migration checklist](docs/private-material-migration.md) —
+  Bitwarden handoff and local cleanup gates.
+
+## Sensitive local material
+
+Public topology and Talos patches live under `talos/`. Disk serials are kept in
+Git-ignored `talos/private/*-private.yaml` files and must also be stored in
+Bitwarden. Talos `secrets.yaml`, `talosconfig`, `kubeconfig`, and generated
+machine configs are credentials or cryptographic material: they never belong
+in this checkout. See [talos/private/README.md](talos/private/README.md) and
+the disaster-recovery guide before removing any local private material.
+
+Before changing this directory, read [AGENTS.md](AGENTS.md).

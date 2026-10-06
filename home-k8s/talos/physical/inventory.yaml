@@ -1,0 +1,53 @@
+# Observed in Talos v1.14.2 maintenance mode on 2026-10-06.
+nodes:
+  - hostname: home-k8s-prod-red
+    address: 192.168.30.61
+    role: control-plane
+    platform: physical
+    talosVersion: v1.14.2
+    network:
+      interface: enp2s0f1
+      macAddress: fc:5c:ee:d5:bb:0f
+    installDisk:
+      device: /dev/nvme0n1
+      size: 512GB
+      model: WD PC SN740 SDDQNQD-512G-1201
+    bootMedia:
+      device: /dev/sdb
+      size: 64GB
+      model: USB3.0 CRW
+      purpose: Talos SD card
+    schematicId: d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e
+    extensions:
+      - amd-ucode
+      - iscsi-tools
+      - lldpd
+      - nvme-cli
+      - realtek-firmware
+      - util-linux-tools
+
+  - hostname: home-k8s-prod-green
+    address: 192.168.30.62
+    role: control-plane
+    platform: physical
+    talosVersion: v1.14.2
+    network:
+      interface: enp2s0f1
+      macAddress: fc:5c:ee:d5:ba:7d
+    installDisk:
+      device: /dev/nvme0n1
+      size: 512GB
+      model: WD PC SN740 SDDQNQD-512G-1201
+    bootMedia:
+      device: /dev/sdb
+      size: 64GB
+      model: USB3.0 CRW
+      purpose: Talos SD card
+    schematicId: d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e
+    extensions:
+      - amd-ucode
+      - iscsi-tools
+      - lldpd
+      - nvme-cli
+      - realtek-firmware
+      - util-linux-tools

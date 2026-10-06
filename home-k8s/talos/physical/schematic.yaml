@@ -1,0 +1,11 @@
+# Shared Image Factory schematic for the two physical control-plane nodes.
+talosVersion: v1.14.2
+schematic:
+  id: d84876dbfddea4bed14e2983c46bb1abd207b0feed954e568505bda4a6dd710e
+  extensions:
+    - amd-ucode
+    - iscsi-tools
+    - lldpd
+    - nvme-cli
+    - realtek-firmware
+    - util-linux-tools

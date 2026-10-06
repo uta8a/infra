@@ -1,0 +1,6 @@
+# Copy to home-k8s-prod-green-private.yaml outside Git and replace the placeholder.
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  diskSelector:
+    match: disk.serial == "<REPLACE_WITH_DISK_SERIAL>"

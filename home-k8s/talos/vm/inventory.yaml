@@ -1,0 +1,19 @@
+node:
+  hostname: home-k8s-prod-yellow
+  address: 192.168.30.63
+  role: control-plane
+  platform: kvm
+  talosVersion: v1.14.2
+  resources:
+    vcpus: 2
+    memoryMiB: 3072
+    diskGiB: 32
+    diskFormat: qcow2
+  network:
+    bridge: br0
+    macAddress: 52:54:00:30:00:63
+  installDisk:
+    device: /dev/vda
+    size: 34GB
+    transport: virtio
+  schematicId: ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
