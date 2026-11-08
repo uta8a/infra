@@ -97,6 +97,10 @@
           cacert
           talosctl
           kubectl
+          kubernetes-helm
+          python3
+          actionlint
+          gitleaks
           bitwarden-cli
           jq
           yq-go

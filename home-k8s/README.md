@@ -32,6 +32,10 @@ Its `nixpkgs` revision is recorded in `flake.lock`.
 
 ## Documents
 
+- [Cilium / Argo CD 導入準備](docs/platform-bootstrap.md) — 実環境の調査結果、
+  固定バージョンの候補設定、CNI 移行の停止条件と適用前レビュー。
+- [OCI配布と同期方針](docs/argocd-oci.md) — GitHub ActionsからGHCRへ配布し、
+  artifactの展開検査とdigest単位のレビューを行う。
 - [Remote toolchain runbook](docs/remote-toolchain-runbook.md) — safe
   public-only transfer and Nix-shell validation.
 - [Operating boundaries](docs/operating-boundaries.md) — ownership, transfer,
