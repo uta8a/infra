@@ -56,8 +56,18 @@ rsync -avR \
   --exclude='generated/' \
   --exclude='secrets/' \
   ./.gitignore ./AGENTS.md ./README.md ./flake.nix ./flake.lock \
-  ./docs ./scripts ./talos ./host \
+  ./docs ./scripts ./talos ./host ./platform \
   home-k8s-dev-blue:~/src/home-k8s/
+```
+
+OCI配布の検証時のみ、infra のルートから以下の公開ファイルも転送する。
+アプリのSecretや `.git` は転送しない。
+
+```bash
+rsync -avR ./home-k8s/flake.nix ./home-k8s/flake.lock ./home-k8s/platform \
+  ./home-k8s-app/linkding/manifest.yaml ./home-k8s-app/longhorn/longhorn.yaml \
+  ./.github/workflows/publish-home-k8s-oci.yaml ./.github/actions/setup-gitleaks \
+  home-k8s-dev-blue:~/src/
 ```
 
 From the remote copy, run each check through the dev shell:

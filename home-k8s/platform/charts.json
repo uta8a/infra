@@ -1,0 +1,4 @@
+{
+  "cilium": {"chart": "cilium", "version": "1.21.0-pre.4", "repository": "https://helm.cilium.io", "namespace": "kube-system"},
+  "argocd": {"chart": "argo-cd", "version": "10.17.0", "repository": "https://argoproj.github.io/argo-helm", "namespace": "argocd"}
+}

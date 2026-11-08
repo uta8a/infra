@@ -1,0 +1,4 @@
+[extend]
+useDefault = true
+
+# ファイル・秘密鍵ルールの除外は設けない。
