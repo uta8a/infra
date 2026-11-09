@@ -41,6 +41,12 @@ provisioning:
 ---
 apiVersion: v1alpha1
 kind: KubeNodeConfig
+nodeIP:
+  validSubnets: [192.168.30.63/32]
 labels:
   home-k8s.io/longhorn-storage: "false"
   home-k8s.io/workload-scheduling: "disabled"
+---
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete

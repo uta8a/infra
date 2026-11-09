@@ -35,8 +35,14 @@ link: controlplane0
 ---
 apiVersion: v1alpha1
 kind: KubeNodeConfig
+nodeIP:
+  validSubnets: [192.168.30.61/32]
 labels:
   home-k8s.io/longhorn-storage: "true"
 taints:
   node-role.kubernetes.io/control-plane:
     $patch: delete
+---
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete

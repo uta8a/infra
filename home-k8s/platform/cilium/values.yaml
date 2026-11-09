@@ -1,13 +1,18 @@
 # 移行完了後の目標設定。稼働中の Flannel と並行して適用しない。
 ipam:
-  mode: kubernetes
-kubeProxyReplacement: true
+  mode: cluster-pool
+  operator:
+    clusterPoolIPv4PodCIDRList: [10.245.0.0/16]
+    clusterPoolIPv4MaskSize: 24
+kubeProxyReplacement: false
 k8sServiceHost: localhost
 k8sServicePort: 7445
 routingMode: tunnel
 tunnelProtocol: vxlan
+tunnelPort: 8473
 bpf:
   hostLegacyRouting: true
+  masquerade: false
 cgroup:
   autoMount:
     enabled: false

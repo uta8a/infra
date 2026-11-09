@@ -1,6 +1,6 @@
 # Cilium / Argo CD 導入準備
 
-## 状態と適用境界
+## 初回調査の状態
 
 2026-11-09 JST、開発ホストから既存 Talos 認証を使用し、保護された一時
 kubeconfig で Kubernetes API を読み取り確認した。認証情報は表示・保存しない。
@@ -20,9 +20,8 @@ kubeconfig で Kubernetes API を読み取り確認した。認証情報は表�
 標準 kubeconfig の current-context は未設定。上記は Secrets の列挙や
 Talos 設定変更を行わず確認したスナップショットで、継続的な健全性保証ではない。
 
-今回の対象は基盤の設計・設定・ローカル描画まで。クラスタ適用、Talos 設定変更、
-ノード再起動、既存 CNI 削除、Cloudflare / DNS 変更は行っていない。
-PWA、OpenSearch、Longhorn、Importer は今回追加しない。
+この表は初回調査時点の状態。後続の実環境への変更は
+[Cilium移行記録](cilium-cutover.md)を参照する。
 
 ## バージョンと停止条件
 
@@ -46,9 +45,9 @@ Argo CD の自己管理も今回行わない。後続の PWA などを Applicati
 後続アプリの配布元は OCI Registry とし、[OCI 同期方針](argocd-oci.md)に従う。
 既存の `home-k8s-app/` は参照も同期もしない。root Application は作成しない。
 
-Cilium の values は **移行完了後の目標設定**であり、Flannel 稼働中に適用する
-移行用設定ではない。既存 Node PodCIDR を使う Kubernetes IPAM、VXLAN、
-kube-proxy replacement を想定する。Talos 固有の capabilities / cgroup と
+Cilium の `values.yaml` は移行後の定常設定。移行時は `values-migration.yaml` を重ねる。
+cluster-pool IPAM と VXLAN を使用し、Service の転送は kube-proxy が担当する。
+Talos 固有の capabilities / cgroup と
 host DNS 用 legacy host routing は
 [公式 Talos 導入ガイド](https://docs.cilium.io/en/stable/installation/k8s-install-talos-linux/)
 に沿う。KubePrism の localhost:7445 は実機で有効性を確認してから使う。
@@ -65,6 +64,10 @@ admin の初期パスワードは
 requests / メモリ limits は初期値であり、負荷計測後に調整する。HA は保証しない。
 
 ## CNI 移行の設計ゲート
+
+事前調査で拡張サービス待ちによる反復再起動が見つかったため、
+拡張サービスの起動完了と、旧タイムアウトを超える
+連続稼働を確認してからCNI切り替えを再開する。
 
 新規クラスタ向けの Helm install をこのクラスタへそのまま実行しない。
 [公式移行手順](https://docs.cilium.io/en/stable/installation/k8s-install-migration/)
@@ -86,7 +89,7 @@ requests / メモリ limits は初期値であり、負荷計測後に調整す�
    単純な `helm uninstall` は CNI の復旧にならない。旧 Talos / CNI 設定復元、
    Pod 再作成までを含むロールバックを事前検証する。reset / wipe は行わない。
 
-このゲート未完了のため、適用用スクリプトや一括削除コマンドは提供しない。
+実施時の順序、検証結果と残る確認事項は [Cilium移行記録](cilium-cutover.md) を参照する。
 
 ## 描画・レビュー
 
@@ -117,9 +120,10 @@ Argo CD namespace は別途作成対象としてレビューする（Pod Securit
 未作成の状態では全差分を評価できないことも記録する。
 Helm release の所有権と既存リソースが衝突した場合は takeover / force を使わず止める。
 
-## 適用後の受入条件（未実施）
+## 適用後の受入条件
 
 - Cilium agent 全3台、operator 2台が Ready。API / DNS / ノード間 Pod 通信が正常。
+  実施結果は [Cilium移行記録](cilium-cutover.md) を参照する。
 - 許可・拒否それぞれの NetworkPolicy と Service 到達性を専用テストで確認する。
   テスト Pod の作成も適用承認後に行う。
 - Argo CD 全コンポーネント正常、port-forward 経由の HTTPS ログイン成功。
@@ -138,7 +142,7 @@ iPhone / Web Push / Cloudflare 検証は後続 Phase 1 に属し、すべて未�
   `quay.io/cilium/cilium:v1.21.0-pre.4`（chart 指定の digest 付き）になることを確認した。
 - OCI Application / AppProject 構成例の YAML 構文と source URL を確認した。
   Argo CD v3.6.1 タグの公式 OCI ガイドにも native OCI source があることを確認した。
-- Cilium の Kubernetes IPAM / kube-proxy replacement / legacy host routing、
+- 初回候補の Kubernetes IPAM / kube-proxy replacement / legacy host routing、
   agent capabilities から SYS_MODULE が除外されることを描画結果で確認した。
 - Argo CD の TLS 有効、Service が ClusterIP（省略時の既定値を含む）、
   red / green 用 nodeSelector、主要コンテナの requests / limits を確認した。
