@@ -16,8 +16,9 @@ red・greenともに `iscsi-tools` と `util-linux-tools` を確認済み。既�
 現在稼働中の設定にこの差分だけを反映する。適用前に差分をレビューし、red・greenを
 1台ずつ作業する。各ノードが `Ready` に戻り、`talosctl get volumestatus u-longhorn` と
 `talosctl get mountstatus u-longhorn` で `/var/mnt/longhorn` が利用可能になってから
-Longhornを同期する。Longhorn V1のエンジン起動に備え、`talosctl read /proc/1/mountinfo` で
-`/var` と `/var/mnt/longhorn` に `noexec` が付いていないことも確認する。
+Longhornを同期する。`talosctl read /proc/1/mountinfo` で、V1のエンジンが置かれる
+`/var/lib/longhorn/engine-binaries` を含むマウントに `noexec` が付いていないことを確認する。
+レプリカのデータを置く `/var/mnt/longhorn` は `noexec` で使用できる。
 
 Longhornがディスクを初回登録する際に容量の70%を予約する。過剰割り当ては100%とし、
 各ノードのレプリカの要求容量は合計で約153 GBまでとする。ディスクの空きが25%の閾値に

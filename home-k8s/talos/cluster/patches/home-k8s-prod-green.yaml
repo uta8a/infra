@@ -52,3 +52,12 @@ taints:
 apiVersion: v1alpha1
 kind: KubeFlannelCNIConfig
 $patch: delete
+---
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: lldpd
+configFiles:
+  - mountPath: /usr/local/etc/lldpd/lldpd.conf
+    content: |
+      configure lldp portidsubtype ifname
+      configure system description "Talos Node"

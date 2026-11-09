@@ -35,6 +35,13 @@ Longhorn to register it. Yellow is excluded. See the
 [Longhorn runbook](../../home-k8s-app/longhorn/README.md) for verification before
 syncing the Argo CD Application.
 
+## LLDP extension
+
+Red and green use a public `ExtensionServiceConfig` for `lldpd`. This lets
+`ext-lldpd` start when regenerating and applying the production configuration.
+After applying a machine configuration, check `talosctl get services` on each
+node for the running `ext-lldpd` service.
+
 ## Generating confidential output
 
 The original generation script creates a *new* Talos identity and is not a
