@@ -76,18 +76,17 @@ NetworkPolicy はワークロード設計時に別途定義する。
 
 ## レジストリと認証
 
-配布先は上記の GHCR 2 package に決定した。公開・非公開とクラスタの pull 認証は未確定。
-draft PR の時点では main publish は実行されず、package 作成済みとは扱わない。
+上記の GHCR 2 package は公開済み。各 package の公開済み digest を匿名で取得できることを確認した。
 公開 artifact なら匿名 pull を優先する。非公開なら Argo CD namespace に
 `argocd.argoproj.io/secret-type: repository` の Secret を別途安全に作成し、
 `type: oci`、Application と同じ `url`、必要な認証情報を設定する。
 pull のみの権限とし、CI の publish 権限を共有しない。
 値を values.yaml / artifact / ログへ残さず、更新・失効時の担当と手順も決める。
 
-## 導入前後の確認（未実施）
+## アプリを追加するときの確認
 
-1. main マージ後に Actions の publish と summary の digest を確認し、pull 認証を設定する。
-   workflow_dispatch は main のみ publish する。外部への artifact 公開はまだ行っていない。
+1. main マージ後に Actions の publish と summary の digest を確認する。
+   workflow_dispatch は main のみ publish する。private package では pull 認証を設定する。
 2. artifact の layer 数・media type・内容・digest と Git commit の対応を確認する。
 3. AppProject / Application の placeholder を置換し、CRD スキーマを検証する。
    本番適用はユーザー承認後に行う。
@@ -97,13 +96,14 @@ pull のみの権限とし、CI の publish 権限を共有しない。
 5. 新 digest への更新と旧 digest への復帰を検証する。認証失効・pull 失敗時の
    エラーに秘密が出ないこと、未認可 source / destination が拒否されることを確認する。
 
-OCI push / pull、Argo CD による reconcile / sync、GHCR認証、復旧は未検証。
+公開済み artifact の匿名 pull と Argo CD からの同期は確認済み。
+private package の認証と digest を戻す試験は未実施。
 
 2026-11-09、開発ホストで両artifactの生成・展開、内部chart 2個の展開、
 allowlist照合とgitleaks検査に成功した。基盤は6ファイル、アプリは2ファイルのみ。
 同じ上流valuesパスに合成の秘密鍵形式を混入すると検査が失敗することも確認した。
 Helm wrapperの描画、actionlint、シェル構文、`git diff --check` も検証した。
-main配布後はActionsで実際にpushしたartifactのdigestと監査成功を確認する。
+main 配布後は Actions の公開結果と、GHCR から取得した artifact の digest を確認する。
 
 ## 手元からのbootstrap
 
@@ -118,3 +118,12 @@ Argo CD namespace 作成、固定chartの Helm install、port-forward / 初期�
 OCI package の `cilium` / `argocd` path は将来の管理用に提供するが、初回bootstrapで
 Applicationを作成しない。HelmからArgo CDへ所有権を移す場合は別途レビューする。
 Longhorn の初回同期は、red・greenのTalosで保存先を準備した後に実施する。[Longhorn 導入手順](../../home-k8s-app/longhorn/README.md)を参照。
+
+## OCI同期の実施結果
+
+Argo CD v3.6.1 の試験用 Application で、公開 GHCR artifact を digest 指定で取得し、
+試験用 namespace 内の ConfigMap を選択同期できた。試験用リソースは削除した。
+
+Longhorn は `home-k8s-app` の公開済み digest を指定して手動同期し、
+Application が `Synced` / `Healthy` になることを確認した。テスト PVC を red から
+green に付け替えて読み出しを確認し、検証用リソースを削除した。
