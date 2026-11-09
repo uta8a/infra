@@ -1,0 +1,9 @@
+# values.yaml の後に重ねる。ノード選択までは CNI 設定を書かない。
+cni:
+  customConf: true
+  exclusive: false
+  uninstall: false
+policyEnforcementMode: never
+operator:
+  unmanagedPodWatcher:
+    restart: false

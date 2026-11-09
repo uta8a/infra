@@ -1,0 +1,14 @@
+apiVersion: cilium.io/v2
+kind: CiliumNodeConfig
+metadata:
+  name: home-k8s-migration
+  namespace: kube-system
+spec:
+  nodeSelector:
+    matchLabels:
+      home-k8s.io/cilium-migration: "true"
+  defaults:
+    write-cni-conf-when-ready: /host/etc/cni/net.d/05-cilium.conflist
+    custom-cni-conf: "false"
+    cni-chaining-mode: none
+    cni-exclusive: "false"
