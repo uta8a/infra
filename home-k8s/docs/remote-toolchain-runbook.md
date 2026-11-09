@@ -65,7 +65,8 @@ OCI配布の検証時のみ、infra のルートから以下の公開ファイ�
 
 ```bash
 rsync -avR ./home-k8s/flake.nix ./home-k8s/flake.lock ./home-k8s/platform \
-  ./home-k8s-app/linkding/manifest.yaml ./home-k8s-app/longhorn/longhorn.yaml \
+  ./home-k8s-app/linkding/manifest.yaml ./home-k8s-app/longhorn/chart.json \
+  ./home-k8s-app/longhorn/values.yaml \
   ./.github/workflows/publish-home-k8s-oci.yaml ./.github/actions/setup-gitleaks \
   home-k8s-dev-blue:~/src/
 ```

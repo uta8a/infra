@@ -47,7 +47,10 @@ class AuditTest(unittest.TestCase):
             artifact = Path(temporary) / "artifact.tar.gz"
             with tarfile.open(artifact, "w:gz") as archive:
                 entry(archive, "linkding/manifest.yaml", b"{}")
-                entry(archive, "longhorn/longhorn.yaml", b"{}")
+                chart = json.loads((PLATFORM.parents[1] / "home-k8s-app/longhorn/chart.json").read_text())
+                entry(archive, "longhorn/Chart.yaml", b"{}")
+                entry(archive, "longhorn/values.yaml", b"{}")
+                entry(archive, f"longhorn/charts/{chart['chart']}-{chart['version']}.tgz", b"")
                 entry(archive, "secrets.yaml", b"{}")
             with self.assertRaisesRegex(ValueError, "public allowlist"):
                 audit.audit("home-k8s-app", artifact)
