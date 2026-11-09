@@ -1,0 +1,6 @@
+{
+  "chart": "longhorn",
+  "version": "1.13.0",
+  "repository": "https://charts.longhorn.io",
+  "namespace": "longhorn-system"
+}

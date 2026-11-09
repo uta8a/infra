@@ -6,6 +6,11 @@ hostname: home-k8s-prod-green
 auto: off
 ---
 apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+volumeType: directory
+---
+apiVersion: v1alpha1
 kind: LinkAliasConfig
 name: controlplane0
 selector:
@@ -37,6 +42,7 @@ apiVersion: v1alpha1
 kind: KubeNodeConfig
 labels:
   home-k8s.io/longhorn-storage: "true"
+  node.longhorn.io/create-default-disk: "true"
 taints:
   node-role.kubernetes.io/control-plane:
     $patch: delete

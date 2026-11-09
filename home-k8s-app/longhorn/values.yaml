@@ -1,0 +1,19 @@
+global:
+  nodeSelector:
+    home-k8s.io/longhorn-storage: "true"
+preUpgradeChecker:
+  jobEnabled: false
+persistence:
+  defaultClass: false
+  defaultClassReplicaCount: 2
+  reclaimPolicy: Retain
+defaultSettings:
+  createDefaultDiskLabeledNodes: true
+  defaultDataPath: /var/mnt/longhorn
+  replicaSoftAntiAffinity: false
+  allowVolumeCreationWithDegradedAvailability: false
+  storageReservedPercentageForDefaultDisk: 70
+  storageMinimalAvailablePercentage: 25
+  storageOverProvisioningPercentage: 100
+  v1DataEngine: true
+  v2DataEngine: false

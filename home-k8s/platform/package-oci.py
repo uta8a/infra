@@ -20,6 +20,33 @@ def public_file(path):
     return path
 
 
+def stage_chart(staging, component, chart, source):
+    directory = staging / component
+    (directory / "charts").mkdir(parents=True)
+    # JSONはYAMLのサブセット。依存chart名をvaluesのキーにする。
+    (directory / "Chart.yaml").write_text(json.dumps({
+        "apiVersion": "v2", "name": f"home-k8s-{component}",
+        "version": "0.1.0", "dependencies": [{
+            "name": chart["chart"], "version": chart["version"],
+            "repository": chart["repository"],
+        }],
+    }, indent=2) + "\n")
+    values = public_file(source / "values.yaml").read_text()
+    (directory / "values.yaml").write_text(
+        chart["chart"] + ":\n" + "".join("  " + line + "\n" for line in values.splitlines())
+    )
+    subprocess.run([
+        "helm", "pull", chart["chart"], "--repo", chart["repository"],
+        "--version", chart["version"], "--destination", str(directory / "charts"),
+    ], check=True)
+    # 描画結果には生成Secretがあるため、配布・ログ出力せず破棄する。
+    with (staging.parent / "rendered.yaml").open("w") as rendered:
+        subprocess.run([
+            "helm", "template", component, str(directory), "--include-crds",
+            "--namespace", chart["namespace"], "--kube-version", "1.37.1",
+        ], check=True, stdout=rendered)
+
+
 def build(package, output):
     output = output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -29,36 +56,14 @@ def build(package, output):
         if package == "home-k8s":
             charts = json.loads(public_file(PLATFORM / "charts.json").read_text())
             for component, chart in charts.items():
-                directory = staging / component
-                (directory / "charts").mkdir(parents=True)
-                # JSONはYAMLのサブセット。依存chart名をvaluesのキーにする。
-                (directory / "Chart.yaml").write_text(json.dumps({
-                    "apiVersion": "v2", "name": f"home-k8s-{component}",
-                    "version": "0.1.0", "dependencies": [{
-                        "name": chart["chart"], "version": chart["version"],
-                        "repository": chart["repository"],
-                    }],
-                }, indent=2) + "\n")
-                values = public_file(PLATFORM / component / "values.yaml").read_text()
-                (directory / "values.yaml").write_text(
-                    chart["chart"] + ":\n" + "".join("  " + line + "\n" for line in values.splitlines())
-                )
-                subprocess.run([
-                    "helm", "pull", chart["chart"], "--repo", chart["repository"],
-                    "--version", chart["version"], "--destination", str(directory / "charts"),
-                ], check=True)
-                # 描画結果には生成Secretがあるため、配布・ログ出力せず破棄する。
-                with (Path(temporary) / "rendered.yaml").open("w") as rendered:
-                    subprocess.run([
-                        "helm", "template", component, str(directory), "--include-crds",
-                        "--namespace", chart["namespace"], "--kube-version", "1.37.1",
-                    ], check=True, stdout=rendered)
+                stage_chart(staging, component, chart, PLATFORM / component)
         else:
-            for relative in ("linkding/manifest.yaml", "longhorn/longhorn.yaml"):
-                source = public_file(REPOSITORY / "home-k8s-app" / relative)
-                target = staging / relative
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(source, target)
+            apps = REPOSITORY / "home-k8s-app"
+            (staging / "linkding").mkdir()
+            shutil.copyfile(public_file(apps / "linkding/manifest.yaml"), staging / "linkding/manifest.yaml")
+            source = apps / "longhorn"
+            chart = json.loads(public_file(source / "chart.json").read_text())
+            stage_chart(staging, "longhorn", chart, source)
         # mtime・所有者などを固定し、同じ入力のarchiveを再現可能にする。
         with output.open("xb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", filename="", mtime=0) as compressed:
             with tarfile.open(fileobj=compressed, mode="w") as archive:

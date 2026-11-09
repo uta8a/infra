@@ -13,9 +13,9 @@ PR はビルド・検証のみで publish 権限を与えない。
 | Package | 展開後の内容 | Argo CD の path |
 | --- | --- | --- |
 | `ghcr.io/uta8a/infra/home-k8s` | Cilium / Argo CD の wrapper chart、固定版の依存 chart、values | `cilium` / `argocd` |
-| `ghcr.io/uta8a/infra/home-k8s-app` | 既存 linkding / longhorn の公開マニフェストのみ | `linkding` / `longhorn` |
+| `ghcr.io/uta8a/infra/home-k8s-app` | linkding の公開マニフェストと Longhorn の固定版 wrapper chart | `linkding` / `longhorn` |
 
-基盤artifactは Helm chart ディレクトリを含む一般 OCI artifact とする。
+Helm chart ディレクトリは一般 OCI artifact に同梱する。
 全体を Helm OCI chart として登録する方式ではない。wrapper の dependency 名の下に
 既存 values を配置し、依存 chart を同梱するため、sync 時に外部 Helm repository へ
 依存解決しに行かない。releaseName は初期導入と同じ `cilium` / `argocd` を指定する。
@@ -117,4 +117,4 @@ Argo CD namespace 作成、固定chartの Helm install、port-forward / 初期�
 
 OCI package の `cilium` / `argocd` path は将来の管理用に提供するが、初回bootstrapで
 Applicationを作成しない。HelmからArgo CDへ所有権を移す場合は別途レビューする。
-アプリ側も既存 linkding / longhorn は配布するだけで同期しない。
+Longhorn の初回同期は、red・greenのTalosで保存先を準備した後に実施する。[Longhorn 導入手順](../../home-k8s-app/longhorn/README.md)を参照。

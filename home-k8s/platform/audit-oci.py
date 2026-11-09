@@ -22,14 +22,16 @@ def extract(archive_path, destination):
 
 
 def audit(package, archive_path):
-    charts = json.loads((PLATFORM / "charts.json").read_text())
     expected = set()
     if package == "home-k8s":
-        for component, chart in charts.items():
-            expected.update((f"{component}/Chart.yaml", f"{component}/values.yaml",
-                             f"{component}/charts/{chart['chart']}-{chart['version']}.tgz"))
+        charts = json.loads((PLATFORM / "charts.json").read_text())
     else:
-        expected.update(("linkding/manifest.yaml", "longhorn/longhorn.yaml"))
+        chart = PLATFORM.parents[1] / "home-k8s-app/longhorn/chart.json"
+        charts = {"longhorn": json.loads(chart.read_text())}
+        expected.add("linkding/manifest.yaml")
+    for component, chart in charts.items():
+        expected.update((f"{component}/Chart.yaml", f"{component}/values.yaml",
+                         f"{component}/charts/{chart['chart']}-{chart['version']}.tgz"))
     with tarfile.open(archive_path) as archive:
         names = archive.getnames()
         if len(names) != len(expected) or set(names) != expected:

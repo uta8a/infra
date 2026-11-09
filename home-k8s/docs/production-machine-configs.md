@@ -29,11 +29,11 @@ patches remove only that default taint, so normal workloads can run there.
 Yellow retains the taint and is therefore excluded from ordinary workload
 scheduling.
 
-Red and green receive the label `home-k8s.io/longhorn-storage=true`; yellow
-receives `home-k8s.io/longhorn-storage=false`. These labels are planning hooks,
-not an installation or enforcement of Longhorn. The physical schematic already
-contains `iscsi-tools` and `util-linux-tools`, but no Longhorn volume or mount
-is created: no independent data disk has been identified or authorized.
+Red and green receive the label `home-k8s.io/longhorn-storage=true`. Their patches
+define a directory user volume on the existing NVMe and a label that allows
+Longhorn to register it. Yellow is excluded. See the
+[Longhorn runbook](../../home-k8s-app/longhorn/README.md) for verification before
+syncing the Argo CD Application.
 
 ## Generating confidential output
 
