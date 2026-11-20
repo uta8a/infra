@@ -79,7 +79,7 @@ spec:
           securityContext: {runAsNonRoot: true, runAsUser: 65532, fsGroup: 65532, seccompProfile: {type: RuntimeDefault}}
           containers:
             - name: sync
-              image: ghcr.io/uta8a/curatedz/sync@sha256:0000000000000000000000000000000000000000000000000000000000000000
+              image: ghcr.io/uta8a/curatedz/sync@sha256:1ff19a184a9d3289f56a99be643d788f31c82d977ad1eedf2ab54fb3e308658b
               env:
                 - {name: CURATEDZ_OPENSEARCH_URL, value: "http://opensearch:9200"}
                 - {name: CURATEDZ_CHECKPOINT, value: "/data/checkpoint.json"}
@@ -111,7 +111,7 @@ spec:
       securityContext: {runAsNonRoot: true, runAsUser: 65532, seccompProfile: {type: RuntimeDefault}}
       containers:
         - name: web
-          image: ghcr.io/uta8a/curatedz/web@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          image: ghcr.io/uta8a/curatedz/web@sha256:b328a277a445ee8e5ec65993733fbaa7e4334bcce41b36c48a4c1ae5183d2fe1
           env:
             - {name: CURATEDZ_OPENSEARCH_URL, value: "http://opensearch:9200"}
             - name: CF_ACCESS_TEAM_DOMAIN
