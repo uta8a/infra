@@ -28,7 +28,7 @@ def audit(package, archive_path):
     else:
         chart = PLATFORM.parents[1] / "home-k8s-app/longhorn/chart.json"
         charts = {"longhorn": json.loads(chart.read_text())}
-        expected.add("linkding/manifest.yaml")
+        expected.update(("linkding/manifest.yaml", "curatedz/manifest.yaml"))
     for component, chart in charts.items():
         expected.update((f"{component}/Chart.yaml", f"{component}/values.yaml",
                          f"{component}/charts/{chart['chart']}-{chart['version']}.tgz"))

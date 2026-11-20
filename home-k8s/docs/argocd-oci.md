@@ -13,14 +13,14 @@ PR はビルド・検証のみで publish 権限を与えない。
 | Package | 展開後の内容 | Argo CD の path |
 | --- | --- | --- |
 | `ghcr.io/uta8a/infra/home-k8s` | Cilium / Argo CD の wrapper chart、固定版の依存 chart、values | `cilium` / `argocd` |
-| `ghcr.io/uta8a/infra/home-k8s-app` | linkding の公開マニフェストと Longhorn の固定版 wrapper chart | `linkding` / `longhorn` |
+| `ghcr.io/uta8a/infra/home-k8s-app` | linkding・curatedzの公開マニフェストとLonghornの固定版wrapper chart | `linkding` / `curatedz` / `longhorn` |
 
 Helm chart ディレクトリは一般 OCI artifact に同梱する。
 全体を Helm OCI chart として登録する方式ではない。wrapper の dependency 名の下に
 既存 values を配置し、依存 chart を同梱するため、sync 時に外部 Helm repository へ
 依存解決しに行かない。releaseName は初期導入と同じ `cilium` / `argocd` を指定する。
-`home-k8s-app` に curatedz PWA はまだ含まれない。既存アプリの運用依存・古い
-image / 設定の改善は別の変更で行い、配布だけでは導入済みと扱わない。
+`home-k8s-app`のcuratedzはOpenSearch、同期worker、Reader、cloudflaredを含む。
+image digest、Git外Secret、Cloudflare Access policyを確認してから個別に手動同期する。
 
 梱包は `home-k8s/platform/package-oci.py` のファイル allowlist で行う。
 Talos 設定、認証情報、生成済み Secret、例示 Application、docs は含めない。
