@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata: {name: curatedz, namespace: argocd}
+spec:
+  sourceRepos: ["oci://ghcr.io/uta8a/infra/home-k8s-app"]
+  destinations: [{server: "https://kubernetes.default.svc", namespace: curatedz}]
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - {group: apps, kind: Deployment}
+    - {group: apps, kind: StatefulSet}
+    - {group: batch, kind: CronJob}
+    - {group: "", kind: Service}
+    - {group: "", kind: PersistentVolumeClaim}
+    - {group: networking.k8s.io, kind: NetworkPolicy}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {name: curatedz, namespace: argocd}
+spec:
+  project: curatedz
+  source:
+    repoURL: "oci://ghcr.io/uta8a/infra/home-k8s-app"
+    targetRevision: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    path: curatedz
+    directory: {recurse: false}
+  destination: {server: "https://kubernetes.default.svc", namespace: curatedz}

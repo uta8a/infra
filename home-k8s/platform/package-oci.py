@@ -59,8 +59,12 @@ def build(package, output):
                 stage_chart(staging, component, chart, PLATFORM / component)
         else:
             apps = REPOSITORY / "home-k8s-app"
-            (staging / "linkding").mkdir()
-            shutil.copyfile(public_file(apps / "linkding/manifest.yaml"), staging / "linkding/manifest.yaml")
+            for component in ("linkding", "curatedz"):
+                (staging / component).mkdir()
+                shutil.copyfile(
+                    public_file(apps / component / "manifest.yaml"),
+                    staging / component / "manifest.yaml",
+                )
             source = apps / "longhorn"
             chart = json.loads(public_file(source / "chart.json").read_text())
             stage_chart(staging, "longhorn", chart, source)

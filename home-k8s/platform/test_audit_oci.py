@@ -47,6 +47,7 @@ class AuditTest(unittest.TestCase):
             artifact = Path(temporary) / "artifact.tar.gz"
             with tarfile.open(artifact, "w:gz") as archive:
                 entry(archive, "linkding/manifest.yaml", b"{}")
+                entry(archive, "curatedz/manifest.yaml", b"{}")
                 chart = json.loads((PLATFORM.parents[1] / "home-k8s-app/longhorn/chart.json").read_text())
                 entry(archive, "longhorn/Chart.yaml", b"{}")
                 entry(archive, "longhorn/values.yaml", b"{}")
