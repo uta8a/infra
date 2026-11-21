@@ -21,7 +21,7 @@ spec:
   project: curatedz
   source:
     repoURL: "oci://ghcr.io/uta8a/infra/home-k8s-app"
-    targetRevision: "sha256:2052034dd4f0f659e81c272843c4a7708d61034996d82ac968b2e25eafd02067"
+    targetRevision: "sha256:a21bc783ed5ad6699248d6aab092b2086ce8025a70ef93783664f81c9f680ae1"
     path: curatedz
     directory: {recurse: false}
   destination: {server: "https://kubernetes.default.svc", namespace: curatedz}
