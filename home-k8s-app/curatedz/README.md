@@ -17,7 +17,7 @@
 
 `curatedz-sync` imageにはchecksum固定の`/usr/local/bin/aws_signing_helper`が含まれる。Podは`curatedz-aws` ConfigMapの共有AWS configを`AWS_CONFIG_FILE`から読み、Secretとしてmountしたworkload証明書で有効期間1時間のSTS credentialを取得する。ConfigMapに記録するbucket、region、Trust Anchor/Profile/Role ARNは秘密情報ではないが、CloudFormation出力との不一致を防ぐためstack更新時に必ず再確認する。
 
-現在のsync/web imageはcuratedz main commit `6098ace`のRuntime images runで発行されたdigestへ固定している。このsync imageから`aws_signing_helper`を同梱しており、旧digestではhelperが存在せずRoles Anywhere認証がexit 127で失敗するため戻さない。
+現在のsync imageはAWS SDKのcredential INFOログを抑制したcuratedz main commit `7ded631`のRuntime images runで発行されたdigestへ固定している。`aws_signing_helper`を同梱していない旧digestではRoles Anywhere認証がexit 127で失敗し、credential INFOログを抑制していないdigestでは一時Access Key IDがログへ出るため、どちらにも戻さない。
 
 証明書の秘密鍵はCA秘密鍵とは別にし、workload証明書のsubjectはAWS側の信頼条件と同じ`CN=curatedz-home-sync`とする。Git外のowner専用ディレクトリにある証明書を確認してから、管理端末で次を実行する。`HOME_SYNC_PKI_DIR`は実際の絶対パスへ置き換える。
 
@@ -42,8 +42,8 @@ Cloudflare側の設定値と本人のメールアドレスはprivateな運用情
 1. Zero TrustのNetworks > Tunnelsでremote-managed Tunnelを作成する。
 2. Tunnelへpublic hostnameを1件追加し、Serviceを`http://curatedz-web.curatedz.svc.cluster.local:80`にする。TLS検証無効化や外部originへの迂回は設定しない。
 3. Access > Applicationsで同じhostnameを対象にSelf-hosted applicationを作成する。pathを限定せずhostname全体を保護する。
-4. Allow policyはIncludeを`Emails`として本人のメールアドレス1件だけにする。`Everyone`、メールdomain全体、Bypass、Service Authは追加しない。
-5. Login methodは自分が管理するIdPまたはOne-time PINだけを有効にする。セッション期間は初期値24時間以下とする。
+4. Allow policyはIncludeを`Login Methods: Passkeys`、Requireを`Emails`として本人のメールアドレス1件だけにする。`Everyone`、メールdomain全体、Bypass、Service Authは追加しない。
+5. One-time PINなど別方式を併用する場合も、本人限定のRequire条件を外さない。セッション期間は初期値24時間以下とする。
 6. ApplicationのAUD、team domain、Tunnel tokenを確認し、`curatedz-cloudflare` Secretの`audience`、`team-domain`、`tunnel-token`へそれぞれ設定する。
 
 `curatedz-web`はCloudflare Accessのedge判定だけに依存せず、`Cf-Access-Jwt-Assertion`の署名、issuer、audience、有効期限を検証する。`curatedz-web` ServiceはClusterIPのままとし、Ingress、LoadBalancer、NodePortを追加しない。NetworkPolicyはcloudflared PodからWeb、Webとsync PodからOpenSearchへの通信だけを許可する。
@@ -57,3 +57,9 @@ Cloudflare側の設定値と本人のメールアドレスはprivateな運用情
 - cluster外からOpenSearchの9200番、Web Serviceの80/8080番へ直接接続できない。
 - Pod内からJWT headerなしでWebへ直接要求した場合、`/`と`/api/search`はHTTP 401を返す。
 - `/healthz`はKubernetes probe用であり、記事、URL、件数、設定値を返さない。
+
+## 適用状況
+
+2026-11-22にhome-k8sへArgo CD経由で適用した。Applicationは`Synced`、`Healthy`、直近operationは`Succeeded`で、namespaceも`CreateNamespace=true`によりArgo CDが作成した。OpenSearch、Web、cloudflared、PVCは正常で、sync CronJobは15分周期で稼働している。
+
+Roles Anywhereを使う検証Jobと再開後の定期Jobはともに成功した。表示前ログ検査ではAccess Key ID、秘密鍵、署名付きURL、Authorization headerのパターンは0件で、OpenSearchの`curatedz-articles` aliasから10件を検索対象として確認した。検証用Jobと、旧imageで失敗していたJobは削除済みである。
