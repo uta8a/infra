@@ -17,6 +17,8 @@
 
 `curatedz-sync` imageにはchecksum固定の`/usr/local/bin/aws_signing_helper`が含まれる。Podは`curatedz-aws` ConfigMapの共有AWS configを`AWS_CONFIG_FILE`から読み、Secretとしてmountしたworkload証明書で有効期間1時間のSTS credentialを取得する。ConfigMapに記録するbucket、region、Trust Anchor/Profile/Role ARNは秘密情報ではないが、CloudFormation出力との不一致を防ぐためstack更新時に必ず再確認する。
 
+現在のsync/web imageはcuratedz main commit `6098ace`のRuntime images runで発行されたdigestへ固定している。このsync imageから`aws_signing_helper`を同梱しており、旧digestではhelperが存在せずRoles Anywhere認証がexit 127で失敗するため戻さない。
+
 証明書の秘密鍵はCA秘密鍵とは別にし、workload証明書のsubjectはAWS側の信頼条件と同じ`CN=curatedz-home-sync`とする。Git外のowner専用ディレクトリにある証明書を確認してから、管理端末で次を実行する。`HOME_SYNC_PKI_DIR`は実際の絶対パスへ置き換える。
 
 ```bash

@@ -17,6 +17,7 @@ class CuratedzManifestTest(unittest.TestCase):
         self.assertNotIn("access-key-id", manifest)
         self.assertNotIn("secret-access-key", manifest)
         self.assertIn("credential_process = /usr/local/bin/aws_signing_helper", manifest)
+        self.assertIn("sync@sha256:f057b21d935cdbb49ccb384929004babbaf5c9da2c95dba6c9f6013e67798f70", manifest)
         self.assertIn('name: AWS_CONFIG_FILE, value: "/etc/curatedz/aws/config"', manifest)
         self.assertIn('name: AWS_SDK_LOAD_CONFIG, value: "1"', manifest)
         self.assertIn("secretName: curatedz-aws", manifest)
