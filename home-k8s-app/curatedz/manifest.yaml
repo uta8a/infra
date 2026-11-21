@@ -90,7 +90,7 @@ spec:
           securityContext: {runAsNonRoot: true, runAsUser: 65532, fsGroup: 65532, seccompProfile: {type: RuntimeDefault}}
           containers:
             - name: sync
-              image: ghcr.io/uta8a/curatedz/sync@sha256:f057b21d935cdbb49ccb384929004babbaf5c9da2c95dba6c9f6013e67798f70
+              image: ghcr.io/uta8a/curatedz/sync@sha256:a2e1a8db728567566bbfa830ec7c19615018a67ff47e698307ebf7dc4191a145
               env:
                 - {name: CURATEDZ_OPENSEARCH_URL, value: "http://opensearch:9200"}
                 - {name: CURATEDZ_CHECKPOINT, value: "/data/checkpoint.json"}
