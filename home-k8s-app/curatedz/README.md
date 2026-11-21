@@ -4,14 +4,33 @@
 適用は既存方針どおり、公開ファイルをOCI artifactへ梱包し、digest固定のArgo CD Applicationを人間が手動同期する。
 
 1. curatedzのmainでRuntime images workflowを成功させ、summaryに出たsync/webのimage digestを`manifest.yaml`へ入れる。
-2. AWSでS3の`state/v1/`、`batches/v1/`、`article-content/v1/`にGetObject/ListBucketだけを持つ同期専用IAM principalを作る。長期key以外の仕組みを採用できる場合は優先する。
-3. `curatedz` namespaceを作り、`curatedz-aws` Secretへ`bucket`、`region`、`access-key-id`、`secret-access-key`を手元から作る。値をGitやshell historyへ残さない。
+2. AWS CloudFormationの`Curatedz` stackが`UPDATE_COMPLETE`で、`BucketName`、`SyncRoleArn`、`SyncTrustAnchorArn`、`SyncProfileArn`が`manifest.yaml`のConfigMapと一致することを確認する。同期Roleは対象S3 prefixのGetObject/ListBucketだけを持ち、IAM Userや長期Access Keyは使用しない。
+3. `curatedz` namespaceを作り、`curatedz-aws` Secretへworkload証明書と秘密鍵だけを手元から投入する。CA秘密鍵、Access Key、STS credentialをKubernetes、Git、shell history、CIログへ残さない。詳細は「IAM Roles Anywhere設定」を参照する。
 4. Cloudflare Zero TrustでTunnel、public hostname、self-hosted Access Application、本人だけを許可するPolicyを作る。詳細は「Cloudflare Access設定」を参照する。Tunnel serviceは`http://curatedz-web.curatedz.svc.cluster.local:80`とする。
 5. `curatedz-cloudflare` Secretへ`team-domain`（例: `TEAM.cloudflareaccess.com`）、Application AUD、Tunnel tokenを手元から作る。
 6. `manifest.yaml`と`application.example.yaml`の差分、PVC、resource、NetworkPolicyをレビューし、OCI digestを固定してArgo CDで手動syncする。OpenSearch、Web、syncの順に確認する。
 7. 未認証のpublic hostnameと`/api/search`が拒否され、認証後のiPhone/PCから検索できることを確認する。ClusterIP以外にOpenSearch/Webの入口がないことも確認する。
 
 再構築はsync imageを同じSecret/PVCで一時Jobとして起動し、引数`--rebuild`を付ける。新indexへの全投入成功後だけaliasが切り替わり、旧indexは自動削除しない。
+
+## IAM Roles Anywhere設定
+
+`curatedz-sync` imageにはchecksum固定の`/usr/local/bin/aws_signing_helper`が含まれる。Podは`curatedz-aws` ConfigMapの共有AWS configを`AWS_CONFIG_FILE`から読み、Secretとしてmountしたworkload証明書で有効期間1時間のSTS credentialを取得する。ConfigMapに記録するbucket、region、Trust Anchor/Profile/Role ARNは秘密情報ではないが、CloudFormation出力との不一致を防ぐためstack更新時に必ず再確認する。
+
+証明書の秘密鍵はCA秘密鍵とは別にし、workload証明書のsubjectはAWS側の信頼条件と同じ`CN=curatedz-home-sync`とする。Git外のowner専用ディレクトリにある証明書を確認してから、管理端末で次を実行する。`HOME_SYNC_PKI_DIR`は実際の絶対パスへ置き換える。
+
+```bash
+openssl verify -CAfile HOME_SYNC_PKI_DIR/ca-cert.pem HOME_SYNC_PKI_DIR/workload-cert.pem
+kubectl create namespace curatedz --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n curatedz create secret generic curatedz-aws \
+  --from-file=tls.crt=HOME_SYNC_PKI_DIR/workload-cert.pem \
+  --from-file=tls.key=HOME_SYNC_PKI_DIR/workload-key.pem \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Secretのキーは`tls.crt`と`tls.key`の2件だけにする。`kubectl get secret ... -o yaml`や`describe`で値を表示せず、キー名だけを確認する。Secret volumeはread-onlyかつgroup-readableな`0440`でmountし、Podの`fsGroup: 65532`からだけ読めるようにする。
+
+初回同期前にCronJobから一時Jobを作り、ログにAccess Key、証明書、署名済みリクエストが出ていないこと、Roles Anywhereからの認証とS3読み取りが成功することを確認する。証明書は期限前に新しい鍵で再発行し、Secret更新後の同期成功を確認してから旧証明書を廃止する。CA秘密鍵はオフライン保管し、漏えい時はCA、Trust Anchor、workload証明書を交換する。
 
 ## Cloudflare Access設定
 
