@@ -59,6 +59,17 @@ spec:
   storageClassName: longhorn
   resources: {requests: {storage: 1Gi}}
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: curatedz-aws, namespace: curatedz}
+data:
+  bucket: curatedz-archiveda4cb258-x6hvqsmspn6y
+  region: ap-northeast-1
+  config: |
+    [default]
+    region = ap-northeast-1
+    credential_process = /usr/local/bin/aws_signing_helper credential-process --certificate /var/run/curatedz-aws/tls.crt --private-key /var/run/curatedz-aws/tls.key --trust-anchor-arn arn:aws:rolesanywhere:ap-northeast-1:019904854450:trust-anchor/1ea13015-a3e2-4f7f-bf31-a749f8979adc --profile-arn arn:aws:rolesanywhere:ap-northeast-1:019904854450:profile/ed3f6b0a-c0b1-4f50-9e0e-1436afecd4b7 --role-arn arn:aws:iam::019904854450:role/Curatedz-HomeSync
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata: {name: curatedz-sync, namespace: curatedz}
@@ -84,19 +95,33 @@ spec:
                 - {name: CURATEDZ_OPENSEARCH_URL, value: "http://opensearch:9200"}
                 - {name: CURATEDZ_CHECKPOINT, value: "/data/checkpoint.json"}
                 - name: CURATEDZ_BUCKET
-                  valueFrom: {secretKeyRef: {name: curatedz-aws, key: bucket}}
+                  valueFrom: {configMapKeyRef: {name: curatedz-aws, key: bucket}}
                 - name: AWS_REGION
-                  valueFrom: {secretKeyRef: {name: curatedz-aws, key: region}}
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom: {secretKeyRef: {name: curatedz-aws, key: access-key-id}}
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom: {secretKeyRef: {name: curatedz-aws, key: secret-access-key}}
+                  valueFrom: {configMapKeyRef: {name: curatedz-aws, key: region}}
+                - {name: AWS_CONFIG_FILE, value: "/etc/curatedz/aws/config"}
+                - {name: AWS_SDK_LOAD_CONFIG, value: "1"}
               resources:
                 requests: {cpu: 50m, memory: 128Mi}
                 limits: {cpu: 500m, memory: 512Mi}
               securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}, readOnlyRootFilesystem: true}
-              volumeMounts: [{name: checkpoint, mountPath: /data}]
-          volumes: [{name: checkpoint, persistentVolumeClaim: {claimName: sync-checkpoint}}]
+              volumeMounts:
+                - {name: checkpoint, mountPath: /data}
+                - {name: aws-config, mountPath: /etc/curatedz/aws, readOnly: true}
+                - {name: aws-credentials, mountPath: /var/run/curatedz-aws, readOnly: true}
+          volumes:
+            - {name: checkpoint, persistentVolumeClaim: {claimName: sync-checkpoint}}
+            - name: aws-config
+              configMap:
+                name: curatedz-aws
+                defaultMode: 0444
+                items: [{key: config, path: config}]
+            - name: aws-credentials
+              secret:
+                secretName: curatedz-aws
+                defaultMode: 0440
+                items:
+                  - {key: tls.crt, path: tls.crt}
+                  - {key: tls.key, path: tls.key}
 ---
 apiVersion: apps/v1
 kind: Deployment

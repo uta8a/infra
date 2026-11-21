@@ -9,6 +9,7 @@ spec:
     - {group: apps, kind: Deployment}
     - {group: apps, kind: StatefulSet}
     - {group: batch, kind: CronJob}
+    - {group: "", kind: ConfigMap}
     - {group: "", kind: Service}
     - {group: "", kind: PersistentVolumeClaim}
     - {group: networking.k8s.io, kind: NetworkPolicy}
