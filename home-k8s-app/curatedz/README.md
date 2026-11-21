@@ -5,7 +5,7 @@
 
 1. curatedzのmainでRuntime images workflowを成功させ、summaryに出たsync/webのimage digestを`manifest.yaml`へ入れる。
 2. AWS CloudFormationの`Curatedz` stackが`UPDATE_COMPLETE`で、`BucketName`、`SyncRoleArn`、`SyncTrustAnchorArn`、`SyncProfileArn`が`manifest.yaml`のConfigMapと一致することを確認する。同期Roleは対象S3 prefixのGetObject/ListBucketだけを持ち、IAM Userや長期Access Keyは使用しない。
-3. `curatedz` namespaceを作り、`curatedz-aws` Secretへworkload証明書と秘密鍵だけを手元から投入する。CA秘密鍵、Access Key、STS credentialをKubernetes、Git、shell history、CIログへ残さない。詳細は「IAM Roles Anywhere設定」を参照する。
+3. Argo CD Applicationの初回手動syncで`curatedz` namespaceを作成する。作成を確認したら、`curatedz-aws` Secretへworkload証明書と秘密鍵だけを手元から投入する。CA秘密鍵、Access Key、STS credentialをKubernetes、Git、shell history、CIログへ残さない。詳細は「IAM Roles Anywhere設定」を参照する。
 4. Cloudflare Zero TrustでTunnel、public hostname、self-hosted Access Application、本人だけを許可するPolicyを作る。詳細は「Cloudflare Access設定」を参照する。Tunnel serviceは`http://curatedz-web.curatedz.svc.cluster.local:80`とする。
 5. `curatedz-cloudflare` Secretへ`team-domain`（例: `TEAM.cloudflareaccess.com`）、Application AUD、Tunnel tokenを手元から作る。
 6. `manifest.yaml`と`application.example.yaml`の差分、PVC、resource、NetworkPolicyをレビューし、OCI digestを固定してArgo CDで手動syncする。OpenSearch、Web、syncの順に確認する。
@@ -21,12 +21,13 @@
 
 ```bash
 openssl verify -CAfile HOME_SYNC_PKI_DIR/ca-cert.pem HOME_SYNC_PKI_DIR/workload-cert.pem
-kubectl create namespace curatedz --dry-run=client -o yaml | kubectl apply -f -
 kubectl -n curatedz create secret generic curatedz-aws \
   --from-file=tls.crt=HOME_SYNC_PKI_DIR/workload-cert.pem \
   --from-file=tls.key=HOME_SYNC_PKI_DIR/workload-key.pem \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
+
+Applicationの`CreateNamespace=true`により、初回手動sync時にArgo CDがdestination namespaceを作る。事前に管理端末からnamespaceを作成しない。SecretはOCI artifactへ含めず、namespaceの作成確認後、workload Podを正常化する前に投入する。
 
 Secretのキーは`tls.crt`と`tls.key`の2件だけにする。`kubectl get secret ... -o yaml`や`describe`で値を表示せず、キー名だけを確認する。Secret volumeはread-onlyかつgroup-readableな`0440`でmountし、Podの`fsGroup: 65532`からだけ読めるようにする。
 

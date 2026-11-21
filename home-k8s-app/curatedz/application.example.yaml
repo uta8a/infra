@@ -25,3 +25,5 @@ spec:
     path: curatedz
     directory: {recurse: false}
   destination: {server: "https://kubernetes.default.svc", namespace: curatedz}
+  syncPolicy:
+    syncOptions: [CreateNamespace=true]

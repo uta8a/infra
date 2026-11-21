@@ -27,6 +27,7 @@ class CuratedzManifestTest(unittest.TestCase):
         application = APPLICATION.read_text()
 
         self.assertIn('{group: "", kind: ConfigMap}', application)
+        self.assertIn("syncOptions: [CreateNamespace=true]", application)
 
 
 if __name__ == "__main__":
