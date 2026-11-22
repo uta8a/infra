@@ -136,7 +136,7 @@ spec:
       securityContext: {runAsNonRoot: true, runAsUser: 65532, seccompProfile: {type: RuntimeDefault}}
       containers:
         - name: web
-          image: ghcr.io/uta8a/curatedz/web@sha256:23705a4c09b68afd47a3ecc7396f9a60d18596a0cd6987c762a9e4560c7b77c7
+          image: ghcr.io/uta8a/curatedz/web@sha256:433c781ee0773b6334b113af9aaf54ae7d1481866e42c31034e5e76bc8e80bbc
           env:
             - {name: CURATEDZ_OPENSEARCH_URL, value: "http://opensearch:9200"}
             - name: CF_ACCESS_TEAM_DOMAIN
